@@ -13,14 +13,14 @@ TARGET_COL = "Production Quality Score"
 # ---------- Chargement des données et du modèle ----------
 
 @st.cache_data
-def load_data(path: str):
+def load_data(path):
     df = pd.read_csv(path)
     df.columns = df.columns.str.strip()
     return df
 
 @st.cache_resource
 def load_lstm_model():
-    model_path = os.path.join("models", "modelDL.h5")
+    model_path = os.path.join("modelDL.h5")
     return load_model(model_path, compile=False)
 
 # CSV principal
@@ -116,9 +116,9 @@ with tab_pred:
             for _ in range(n_steps):
                 y_scaled = model.predict(seq_multi)[0][0]
                 preds_scaled.append(y_scaled)
-                # on duplique le dernier pas et on remplace seulement la cible implicite
-                # ici on suppose que la cible est corrélée aux features, on ne modifie pas X,
-                # c'est une démo simple
+                # Mise à jour de la séquence : shift et append les mêmes features (assumption constantes)
+                seq_multi[0, :-1, :] = seq_multi[0, 1:, :]
+                seq_multi[0, -1, :] = user_point
             preds_real = scaler_y.inverse_transform(
                 np.array(preds_scaled).reshape(-1, 1)
             ).flatten()
